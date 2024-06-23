@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MySQL Table to HTML</title>
+</head>
+<body>
+  <h1>MySQL Table Data</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Cus_name</th>
+        <th>Balance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% data.forEach((row) => { %>
+        <tr>
+          <td><%= row.ID %></td>
+          <td><%= row.Cus_name %></td>
+          <td><%= row.Balance %></td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</body>
+</html>
