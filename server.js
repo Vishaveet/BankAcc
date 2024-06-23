@@ -38,7 +38,7 @@ connection.connect((error) => {
 });
 
 // Define a route to render the data from MySQL
-app.get("/", (req, res) => {
+app.get("/acc", (req, res) => {
   connection.query("SELECT * FROM Bank", (error, data) => {
     if (error) throw error;
 
@@ -51,28 +51,71 @@ app.get("/", (req, res) => {
 });
 
 app.get("/create", (req, res) => {
+  let id=req.query.id;
+  let name=req.query.name;
+  let balance=req.query.balance;
+  console.log(req.query.id);
   connection.query(
-    `INSERT INTO Bank (id,cus_name,balance) values (3,'krish',1000)`,
+    `INSERT INTO Bank (id,cus_name,balance) values (null,'${name}','${balance}')`,
     (error) => {
       if (error) throw error;
       console.log("Inserted data successfully");
-      res.send("Open Account successfully Acc_no=3");
+      // res.send(`Open Account successfully Acc_no=${id}`);
     }
   );
+  connection.query(
+    `SELECT distinct LAST_INSERT_ID() as id FROM bank`,(error,data)=>{
+      if (error) throw error;
+       res.json({ID:data});
+    }
+  )
 });
-app.get("/update", (req, res) => {
+app.get("/deposit", (req, res) => {
+    let balance=req.query.balance;
+    console.log(balance);
+    let id=req.query.id;
     connection.query(
-      `UPDATE Bank SET Balance = 1000 WHERE ID = 1`,
+      `UPDATE Bank SET Balance =balance +'${balance}' WHERE ID ='${id}'`,
       (error) => {
         if (error) throw error;
         console.log("Updated data successfully");
-        res.send("Update Acc Successfully Acc_no=1");
+        // res.send("Update Acc Successfully Acc_no=1");
       }
     );
+    connection.query(
+      `SELECT * FROM Bank where ID='${id}'`,(error,data)=>{
+        if(error) throw error;
+        
+        res.json({data});
+      }
+    )
+});
+
+app.get("/withdraw", (req, res) => {
+  let balance=req.query.balance;
+  console.log(balance);
+  let id=req.query.id;
+  connection.query(
+    `UPDATE Bank SET Balance =balance -'${balance}' WHERE ID ='${id}'`,
+    (error) => {
+      if (error) throw error;
+      console.log("Updated data successfully");
+      // res.send("Update Acc Successfully Acc_no=1");
+    }
+  );
+  connection.query(
+    `SELECT * FROM Bank where ID='${id}'`,(error,data)=>{
+      if(error) throw error;
+      
+      res.json({data});
+    }
+  )
 });
 
 app.get("/search", (req, res) => {
-    connection.query("SELECT * FROM Bank WHERE ID=2", (error, results) => {
+    
+  let id=req.query.id;
+    connection.query(`SELECT * FROM Bank WHERE ID='${id}'`, (error, results) => {
       if (error) throw error;
   
       // Render the EJS template with data from the MySQL table
