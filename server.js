@@ -13,7 +13,7 @@ app.use(express.json());
 
 // CORS Middleware
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -38,7 +38,7 @@ connection.connect((error) => {
 });
 
 // Define a route to render the data from MySQL
-app.get("/acc", (req, res) => {
+app.get("/", (req, res) => {
   connection.query("SELECT * FROM Bank", (error, data) => {
     if (error) throw error;
 
@@ -49,27 +49,24 @@ app.get("/acc", (req, res) => {
       res.json({ data: data });
   });
 });
-
-app.get("/create", (req, res) => {
-  let id=req.query.id;
-  let name=req.query.name;
-  let balance=req.query.balance;
-  console.log(req.query.id);
+app.post("/create", (req, res) => {
+  const { Cus_name, balance } = req.body; // Assuming you send Cus_name and balance in the request body
+  
   connection.query(
-    `INSERT INTO Bank (id,cus_name,balance) values (null,'${name}','${balance}')`,
-    (error) => {
-      if (error) throw error;
-      console.log("Inserted data successfully");
-      // res.send(`Open Account successfully Acc_no=${id}`);
+    `INSERT INTO Bank (cus_name, balance) values ('${Cus_name}', '${balance}')`,
+    (error, results) => {
+      if (error) {
+        console.error("Error inserting data:", error);
+        res.status(500).json({ error: 'Failed to create account' });
+      } else {
+        const insertedId = results.insertId;
+        console.log("Inserted data successfully with ID:", insertedId);
+        res.json({ ID: insertedId });
+      }
     }
   );
-  connection.query(
-    `SELECT distinct LAST_INSERT_ID() as id FROM bank`,(error,data)=>{
-      if (error) throw error;
-       res.json({ID:data});
-    }
-  )
 });
+
 app.get("/deposit", (req, res) => {
     let balance=req.query.balance;
     console.log(balance);
@@ -124,8 +121,21 @@ app.get("/search", (req, res) => {
     });
 });
 
+app.get("/close", (req, res) => {
+    
+  let id=req.query.id;
+    connection.query(`Delete FROM bank WHERE ID='${id}'`, (error, results) => {
+      if (error) throw error;
+  
+      // Render the EJS template with data from the MySQL table
+      console.log("delete data successfully");
+      res.json({ data: results });
+    });
+});
+
+
 app.get('/max',(req,res)=>{
-  connection.query("SELECT max(Balance) FROM bank",(error,data)=>{
+  connection.query("SELECT max(Balance) as balance FROM bank",(error,data)=>{
     if(error) throw error;
 
     console.log("maximum Balance");
@@ -133,9 +143,8 @@ app.get('/max',(req,res)=>{
   })
 })
 
-
 app.get('/min',(req,res)=>{
-  connection.query("SELECT min(Balance) FROM bank",(error,data)=>{
+  connection.query("SELECT min(Balance) as balance FROM bank",(error,data)=>{
     if(error) throw error;
 
     console.log("minimum Balance");
@@ -144,7 +153,7 @@ app.get('/min',(req,res)=>{
 })
 
 app.get('/avg',(req,res)=>{
-  connection.query("SELECT avg(Balance) FROM bank",(error,data)=>{
+  connection.query("SELECT avg(Balance) as avg FROM bank",(error,data)=>{
     if(error) throw error;
 
     console.log("Average Balance");
@@ -153,7 +162,7 @@ app.get('/avg',(req,res)=>{
 })
 
 app.get('/count',(req,res)=>{
-  connection.query("SELECT count(Balance) FROM bank",(error,data)=>{
+  connection.query("SELECT count(Balance) as Accs FROM bank",(error,data)=>{
     if(error) throw error;
 
     console.log("Count No of Acc");
@@ -162,7 +171,7 @@ app.get('/count',(req,res)=>{
 })
 
 app.get('/sum',(req,res)=>{
-  connection.query("SELECT sum(Balance) FROM bank",(error,data)=>{
+  connection.query("SELECT sum(Balance) as sum FROM bank",(error,data)=>{
     if(error) throw error;
 
     console.log("Sum of Balance");
@@ -177,8 +186,7 @@ app.get('/all',(req,res)=>{
     console.log("Sum of Balance");
     res.json({data:data})
   })
-})
-
+});
 
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
